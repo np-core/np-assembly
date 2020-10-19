@@ -146,7 +146,7 @@ workflow np_core_assembly {
         // ONT and Illumina reference assemblies
         get_single_fastx(params.fastq) | ont_qc | ont_assembly
         
-        get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true) | view | illumina_assembly
+        get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true) | illumina_assembly
         
         // Branch into hybrid corrections with Pilon
         get_matching_data(ont_assembly.out[0], illumina_assembly.out[0], false) | FlyePilon  // flye assembly correction
