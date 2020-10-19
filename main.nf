@@ -32,7 +32,7 @@ def get_matching_data( channel1, channel2 ){
 // ONT Quality control subworkflow
 
 params.fastq = 'fastq/*.fq'
-params.outdir = 'PNG'
+params.outdir = 'results'
 params.reference = "$PWD/jdk.fasta"
 params.length = 200
 params.quality = 7
@@ -83,7 +83,7 @@ workflow ont_assembly {
 // Illumina assembly, hybrid correction and reference comparison subworkflow
 
 params.fasta = "fasta/*.fasta"
-params.illumina = "fastq/*_{1,2}.fastq.gz"
+params.illumina = "fastq/*_R{1,2}.fastq.gz"
 params.depth = 200
 params.assembler = "skesa"
 
