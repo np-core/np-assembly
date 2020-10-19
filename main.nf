@@ -129,12 +129,10 @@ workflow hybrid_correction {
         ont_assembly // id, fasta
         reference_assembly // id, fasta
     main:
-        get_matching_data(ont_assembly, illumina_reads, false) | PilonCorrection(correction_data)
-        
+        get_matching_data(ont_assembly, illumina_reads, false) | PilonCorrection
         get_matching_data(ont_assembly, reference_assembly, false) | ONTComparison
         get_matching_data(PilonCorrection.out, reference_data, false) | HybridComparison
-
-        HybridGenotype(PilonCorrection.out)
+        HybridGenotype(PilonCorrection.out)  // Genotype corrected assembly
     emit:
         PilonCorrection.out
 }       
