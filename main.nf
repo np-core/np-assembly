@@ -67,7 +67,6 @@ params.kpneumoniae = false
 // Stage files
 
 reference = file(params.reference)
-reference | view
 
 // Modules 
 
