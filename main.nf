@@ -64,6 +64,11 @@ params.tag = null
 params.saureus = true
 params.kpneumoniae = false
 
+// Stage files
+
+reference = file(params.reference)
+
+
 // Modules 
 
 include { Nanoq } from './modules/nanoq'
@@ -92,7 +97,7 @@ workflow ont_qc {
     main:
         NanoqStatistics(reads)
         Nanoq(reads)
-        CoverM(Nanoq.out, params.reference)
+        CoverM(Nanoq.out, reference)
         Rasusa (Nanoq.out) 
     emit:
         Rasusa.out // id, reads
