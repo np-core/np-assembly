@@ -81,7 +81,7 @@ workflow ont_assembly {
         reads // id, reads
     main:
         Flye(reads)
-        get_matching_data(Flye.out, reads) | Racon
+        get_matching_data(Flye.out, reads, false) | Racon
         Medaka(Racon.out)
         MedakaGenotype(Medaka.out)
     emit:
@@ -149,8 +149,8 @@ workflow np_core_assembly {
         get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true) | illumina_assembly
         
         // Branch into hybrid corrections with Pilon
-        get_matching_data(ont_assembly.out[0], illumina_assembly.out[0]) | FlyePilon  // flye assembly correction
-        get_matching_data(ont_assembly.out[1], illumina_assembly.out[0]) | MedakaPilon  // polished assembly correction
+        get_matching_data(ont_assembly.out[0], illumina_assembly.out[0], false) | FlyePilon  // flye assembly correction
+        get_matching_data(ont_assembly.out[1], illumina_assembly.out[0], false) | MedakaPilon  // polished assembly correction
         
         // TODO: Implement HyPo, POLCA and NextPolish alternatives, and chained polishing
 
@@ -158,9 +158,9 @@ workflow np_core_assembly {
         MedakaHybridGenotype(MedakaPilon.out)
 
         // Compare Flye and Medaka assemblies to Illumina reference assembly (DNADIFF)
-        get_matching_data(ont_assembly.out[1], illumina_assembly.out[1]) | MedakaComparison // illumina vs. polished assembly
-        get_matching_data(FlyePilon.out, illumina_assembly.out[1]) | FlyeHybridComparison // illumina vs. corrected raw assembly
-        get_matching_data(MedakaPilon.out, illumina_assembly.out[1]) | MedakaHybridComparison // illumina vs. corrected polished assembly
+        get_matching_data(ont_assembly.out[1], illumina_assembly.out[1], false) | MedakaComparison // illumina vs. polished assembly
+        get_matching_data(FlyePilon.out, illumina_assembly.out[1], false) | FlyeHybridComparison // illumina vs. corrected raw assembly
+        get_matching_data(MedakaPilon.out, illumina_assembly.out[1], false) | MedakaHybridComparison // illumina vs. corrected polished assembly
    }
 }
 
