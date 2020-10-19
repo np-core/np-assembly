@@ -48,12 +48,43 @@ params.coverage = 200
 params.genome_size = '2.8m'
 params.preset = 'minimap2-ont'  // coverm
 
+// ONT assembly and polishing subworkflow
 
+params.assembly_options = "--plasmids"
+params.medaka_model = "r941_min_high_g360"
+
+// Illumina assembly, hybrid correction and reference comparison subworkflow
+
+params.fasta = "fasta/*.fasta"
+params.illumina = "fastq/*_R{1,2}.fastq.gz"
+params.depth = 200
+params.assembler = "skesa"
+
+params.tag = null
+params.saureus = true
+params.kpneumoniae = false
+
+// Modules 
 
 include { Nanoq } from './modules/nanoq'
 include { Rasusa } from './modules/rasusa'
 include { CoverM  } from './modules/coverm'
 include { NanoqStatistics } from './modules/nanoq'
+include { Fastp } from './modules/fastp'
+include { Shovill } from './modules/shovill'
+include { Flye } from './modules/flye'
+include { Racon } from './modules/racon'
+include { Medaka } from './modules/medaka'
+
+// Assign tags for output names / folders and parsing with NanoPath
+
+include { Pilon as PilonCorrection } from './modules/pilon' addParams( tag: 'medaka' )
+include { Dnadiff as ONTComparison } from './modules/dnadiff' addParams( tag: 'medaka' )
+include { Dnadiff as HybridComparison } from './modules/dnadiff' addParams( tag: 'medaka_hybrid' )
+include { Genotype as IlluminaGenotype } from './modules/genotype' addParams( tag: 'illumina' )
+include { Genotype as AssemblyGenotype } from './modules/genotype' addParams( tag: 'preassembled' )
+include { Genotype as HybridGenotype } from './modules/genotype' addParams( tag: 'hybrid' )
+include { Genotype as MedakaGenotype } from './modules/genotype' addParams( tag: 'ont' )
 
 workflow ont_qc {
     take:
@@ -67,14 +98,6 @@ workflow ont_qc {
         Rasusa.out // id, reads
 }
 
-// ONT assembly and polishing subworkflow
-
-params.assembly_options = "--plasmids"
-params.medaka_model = "r941_min_high_g360"
-
-include { Flye } from './modules/flye'
-include { Racon } from './modules/racon'
-include { Medaka } from './modules/medaka'
 
 workflow ont_assembly {
     take:
@@ -89,32 +112,6 @@ workflow ont_assembly {
         Medaka.out  // id, polished assembly
 }
 
-// Illumina assembly, hybrid correction and reference comparison subworkflow
-
-params.fasta = "fasta/*.fasta"
-params.illumina = "fastq/*_R{1,2}.fastq.gz"
-params.depth = 200
-params.assembler = "skesa"
-
-params.tag = null
-params.saureus = true
-params.kpneumoniae = false
-
-include { Fastp } from './modules/fastp'
-include { Shovill } from './modules/shovill'
-
-// Assign tags for separate output folders in params.outdir / hybrid / params.tag
-include { Pilon as FlyePilon } from './modules/pilon' addParams( tag: 'flye' )
-include { Pilon as MedakaPilon } from './modules/pilon' addParams( tag: 'medaka' )
-
-include { Dnadiff as MedakaComparison } from './modules/dnadiff' addParams( tag: 'medaka' )
-include { Dnadiff as FlyeHybridComparison } from './modules/dnadiff' addParams( tag: 'flye_hybrid' )
-include { Dnadiff as MedakaHybridComparison } from './modules/dnadiff' addParams( tag: 'medaka_hybrid' )
-
-include { Genotype as IlluminaGenotype } from './modules/genotype' addParams( tag: 'illumina' )
-include { Genotype as AssemblyGenotype } from './modules/genotype' addParams( tag: 'fasta' )
-include { Genotype as MedakaHybridGenotype } from './modules/genotype' addParams( tag: 'hybrid' )
-include { Genotype as MedakaGenotype } from './modules/genotype' addParams( tag: 'ont' )
 
 workflow illumina_assembly {
     take:
@@ -122,10 +119,25 @@ workflow illumina_assembly {
     main:
         Fastp(reads) | Shovill | IlluminaGenotype
     emit:
-        Fastp.out
-        Shovill.out
-        IlluminaGenotype.out
+        Fastp.out  // id, fwd, rev
+        Shovill.out  // id, fasta
 }
+
+workflow hybrid_correction {
+    take:
+        illumina_reads // id, fwd, rev
+        ont_assembly // id, fasta
+        reference_assembly // id, fasta
+    main:
+        get_matching_data(ont_assembly, illumina_reads, false) | PilonCorrection(correction_data)
+        
+        get_matching_data(ont_assembly, reference_assembly, false) | ONTComparison
+        get_matching_data(PilonCorrection.out, reference_data, false) | HybridComparison
+
+        HybridGenotype(PilonCorrection.out)
+    emit:
+        PilonCorrection.out
+}       
 
 
 workflow np_core_assembly {
@@ -145,22 +157,14 @@ workflow np_core_assembly {
    if (params.workflow == "hybrid") {
         // ONT and Illumina reference assemblies
         get_single_fastx(params.fastq) | ont_qc | ont_assembly
-        
         get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true) | illumina_assembly
         
-        // Branch into hybrid corrections with Pilon
-        get_matching_data(ont_assembly.out[0], illumina_assembly.out[0], false) | FlyePilon  // flye assembly correction
-        get_matching_data(ont_assembly.out[1], illumina_assembly.out[0], false) | MedakaPilon  // polished assembly correction
-        
+        hybrid_correction(
+            illumina_assembly.out[0], // qc reads
+            ont_assembly.out[1], // polished ont assembly
+            illumina_assembly.out[1] // reference illumina assembly
+        )
         // TODO: Implement HyPo, POLCA and NextPolish alternatives, and chained polishing
-
-        // Genotype corrected hybrid assemblies from Medaka 
-        MedakaHybridGenotype(MedakaPilon.out)
-
-        // Compare Flye and Medaka assemblies to Illumina reference assembly (DNADIFF)
-        get_matching_data(ont_assembly.out[1], illumina_assembly.out[1], false) | MedakaComparison // illumina vs. polished assembly
-        get_matching_data(FlyePilon.out, illumina_assembly.out[1], false) | FlyeHybridComparison // illumina vs. corrected raw assembly
-        get_matching_data(MedakaPilon.out, illumina_assembly.out[1], false) | MedakaHybridComparison // illumina vs. corrected polished assembly
    }
 }
 
