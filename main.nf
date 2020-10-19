@@ -36,7 +36,7 @@ params.outdir = 'results'
 params.reference = "$PWD/jdk.fasta"
 params.length = 200
 params.quality = 7
-params.subsample = 200
+params.coverage = 200
 params.genome_size = '2.8m'
 params.preset = 'minimap2-ont'  // coverm
 
@@ -45,7 +45,7 @@ ref = file(params.reference)
 include { Nanoq } from './modules/nanoq'
 include { Rasusa } from './modules/rasusa'
 include { CoverM  } from './modules/coverm'
-include { NanoqStatistics } from './modules/nanoq' addParams(length: 0, quality: 0)
+include { NanoqStatistics } from './modules/nanoq'
 
 workflow ont_qc {
     take:
