@@ -131,7 +131,7 @@ workflow hybrid_correction {
     main:
         get_matching_data(ont_assembly, illumina_reads, false) | PilonCorrection
         get_matching_data(ont_assembly, reference_assembly, false) | ONTComparison
-        get_matching_data(PilonCorrection.out, reference_data, false) | HybridComparison
+        get_matching_data(PilonCorrection.out, reference_assembly, false) | HybridComparison
         HybridGenotype(PilonCorrection.out)  // Genotype corrected assembly
     emit:
         PilonCorrection.out
