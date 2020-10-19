@@ -12,7 +12,7 @@ def get_paired_fastq( glob ){
     return channel.fromFilePairs(glob, flat: true)
 }
 
-def get_matching_data( channel1, channel2 ){
+def get_matching_data( channel1, channel2, illumina = false ){
 
     // Get matching data by ID (first field) from two channels
     // by crossing, checking for matched ID and returning
@@ -20,7 +20,13 @@ def get_matching_data( channel1, channel2 ){
 
     channel1.cross(channel2).map { crossed ->
         if (crossed[0][0] == crossed[1][0]){
-            tuple( crossed[0][0], *crossed[0][1..-1], *crossed[1][1..-1] )
+            if (illumina){
+                // First channel returning Illumina only for hybrid reference assembly
+                crossed[0]
+            } else {
+                // Return mix of channels for evaluations in hybrid assembly workflow
+                tuple( crossed[0][0], *crossed[0][1..-1], *crossed[1][1..-1] )
+            }
         } else {
             null
         }
@@ -129,8 +135,8 @@ workflow np_core_assembly {
        get_single_fastx(params.fasta)  | AssemblyGenotype
    }  
    if (params.workflow == "ont"){
-    // ONT standard workflow with Flye + Medaka and genotyping
-    get_single_fastx(params.fastq) | ont_qc | ont_assembly
+        // ONT standard workflow with Flye + Medaka and genotyping
+        get_single_fastx(params.fastq) | ont_qc | ont_assembly
    }
    if (params.workflow == "illumina") {
        // Illumina standard workflow and genotyping
@@ -139,7 +145,10 @@ workflow np_core_assembly {
    if (params.workflow == "hybrid") {
         // ONT and Illumina reference assemblies
         get_single_fastx(params.fastq) | ont_qc | ont_assembly
-        get_paired_fastq(params.illumina) | illumina_assembly
+        
+        get_matching_data(
+            get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true  // matching illumina only
+        ) | illumina_assembly
         
         // Branch into hybrid corrections with Pilon
         get_matching_data(ont_assembly.out[0], illumina_assembly.out[0]) | FlyePilon  // flye assembly correction
