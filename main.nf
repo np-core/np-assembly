@@ -39,9 +39,9 @@ def get_matching_data( channel1, channel2, illumina = false ){
 
 
 params.workflow = 'hybrid'
+params.reference = ""
 params.fastq = 'fastq/*.fq'
 params.outdir = 'results'
-params.reference = "$PWD/jdk.fasta"
 params.length = 200
 params.quality = 7
 params.coverage = 200
@@ -67,7 +67,7 @@ params.kpneumoniae = false
 // Stage files
 
 reference = file(params.reference)
-
+reference | view
 
 // Modules 
 
