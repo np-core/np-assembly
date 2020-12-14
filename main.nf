@@ -53,6 +53,10 @@ params.preset = 'minimap2-ont'  // coverm
 params.assembly_options = "--plasmids"
 params.medaka_model = "r941_min_high_g360"
 
+if ( file(params.medaka_model).exists() ){
+    params.medaka_model = file(params.medaka_model)
+}
+
 // Illumina assembly, hybrid correction and reference comparison subworkflow
 
 params.fasta = "fasta/*.fasta"
