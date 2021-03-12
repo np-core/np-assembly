@@ -148,7 +148,7 @@ workflow hybrid_correction {
         PilonCorrection.out
 }       
 
-workflow unicycler_hybrid {
+workflow unicycler_hybrid_assembly {
     take:
         illumina_reads // id, fwd, rev
         reference_assembly // id, fasta
@@ -188,7 +188,7 @@ workflow np_core_assembly {
         )
 
         // Unicycler hybrid assembly
-        unicycler_hybrid(illumina_assembly.out[0], illumina_assembly.out[1])
+        unicycler_hybrid_assembly(illumina_assembly.out[0], illumina_assembly.out[1])
 
    }
 }
