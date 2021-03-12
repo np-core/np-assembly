@@ -83,7 +83,7 @@ include { Shovill } from './modules/shovill'
 include { Flye } from './modules/flye'
 include { Racon } from './modules/racon'
 include { Medaka } from './modules/medaka'
-inlcude { UnicyclerHybrid } from './modules/unicycler'
+include { UnicyclerHybrid } from './modules/unicycler'
 
 // Assign tags for output names / folders and parsing with NanoPath
 
