@@ -175,7 +175,7 @@ workflow np_core_assembly {
         )
 
         // Unicycler hybrid assembly
-        get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), false) | UnicyclerHybrid
+        get_matching_data(get_paired_fastq(params.illumina) | Fastp, get_single_fastx(params.fastq), false) | UnicyclerHybrid
         get_matching_data(UnicyclerHybrid.out, illumina_assembly.out[1], false) | UnicyclerComparison
         UnicyclerGenotype(UnicyclerHybrid.out)
    }
