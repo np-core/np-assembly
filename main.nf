@@ -188,10 +188,7 @@ workflow np_core_assembly {
         )
 
         // Unicycler hybrid assembly
-        unicycler_hybrid(
-            illumina_assembly.out[0],
-            illumina_assembly.out[1]
-        )
+        unicycler_hybrid(illumina_assembly.out[0], illumina_assembly.out[1])
 
    }
 }
