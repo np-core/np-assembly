@@ -83,6 +83,7 @@ include { Shovill } from './modules/shovill'
 include { Flye } from './modules/flye'
 include { Racon } from './modules/racon'
 include { Medaka } from './modules/medaka'
+inlcude { UnicyclerHybrid } from './modules/unicycler'
 
 // Assign tags for output names / folders and parsing with NanoPath
 
@@ -93,6 +94,8 @@ include { Genotype as IlluminaGenotype } from './modules/genotype' addParams( ta
 include { Genotype as AssemblyGenotype } from './modules/genotype' addParams( tag: 'preassembled' )
 include { Genotype as HybridGenotype } from './modules/genotype' addParams( tag: 'hybrid' )
 include { Genotype as MedakaGenotype } from './modules/genotype' addParams( tag: 'ont' )
+
+
 
 workflow ont_qc {
     take:
@@ -160,7 +163,7 @@ workflow np_core_assembly {
        // Illumina standard workflow and genotyping
        get_paired_fastq(params.illumina) | illumina_assembly
    }
-   if (params.workflow == "hybrid") {
+   if (params.workflow == "hybrid-pilon") {
         // ONT and Illumina reference assemblies
         get_single_fastx(params.fastq) | ont_qc | ont_assembly
         get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true) | illumina_assembly
@@ -170,7 +173,13 @@ workflow np_core_assembly {
             ont_assembly.out[1], // polished ont assembly
             illumina_assembly.out[1] // reference illumina assembly
         )
-        // TODO: Implement HyPo, POLCA and NextPolish alternatives, and chained polishing
+   }
+   if (params.workflow == "hybrid-unicycler") {
+        // Unicycler long-read hybrid assembly
+        get_single_fastx(params.fastq) | ont_qc
+        get_paired_fastq(params.illumina) | Fastp
+        get_matching_data(Fastp.out, ont_qc.out, false) | UnicyclerHybrid
+        
    }
 }
 
