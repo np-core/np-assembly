@@ -148,6 +148,19 @@ workflow hybrid_correction {
         PilonCorrection.out
 }       
 
+workflow unicycler_hybrid {
+    take:
+        illumina_reads // id, fwd, rev
+        ont_reads // id, fasta
+    main:
+        get_single_fastx(params.fastq) | ont_qc
+        get_paired_fastq(params.illumina) | Fastp
+        get_matching_data(Fastp.out, ont_qc.out, false) | UnicyclerHybrid
+    emit:
+        UnicyclerHybrid.out
+
+}
+
 
 workflow np_core_assembly {
 
@@ -165,21 +178,14 @@ workflow np_core_assembly {
    }
    if (params.workflow == "hybrid-pilon") {
         // ONT and Illumina reference assemblies
-        get_single_fastx(params.fastq) | ont_qc | ont_assembly
-        get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true) | illumina_assembly
         
-        hybrid_correction(
-            illumina_assembly.out[0], // qc reads
-            ont_assembly.out[1], // polished ont assembly
-            illumina_assembly.out[1] // reference illumina assembly
-        )
    }
    if (params.workflow == "hybrid-unicycler") {
         // Unicycler long-read hybrid assembly
-        get_single_fastx(params.fastq) | ont_qc
-        get_paired_fastq(params.illumina) | Fastp
-        get_matching_data(Fastp.out, ont_qc.out, false) | UnicyclerHybrid
-        
+        unicycler_hybrid(
+            get_paired_fastq(params.illumina), 
+            get_single_fastx(params.fastq)
+        )
    }
 }
 
