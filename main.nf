@@ -94,8 +94,8 @@ include { Genotype as IlluminaGenotype } from './modules/genotype' addParams( ta
 include { Genotype as AssemblyGenotype } from './modules/genotype' addParams( tag: 'preassembled' )
 include { Genotype as HybridGenotype } from './modules/genotype' addParams( tag: 'hybrid' )
 include { Genotype as MedakaGenotype } from './modules/genotype' addParams( tag: 'ont' )
-
-
+include { Genotype as UnicyclerGenotype } from './modules/genotype' addParams( tag: 'unicycler' )
+include { Dnadiff as UnicyclerComparison } from './modules/dnadiff' addParams( tag: 'unicycler' )
 
 workflow ont_qc {
     take:
@@ -151,10 +151,11 @@ workflow hybrid_correction {
 workflow unicycler_hybrid {
     take:
         illumina_reads // id, fwd, rev
-        ont_reads // id, fasta
+        reference_assembly // id, fasta
     main:
-        get_paired_fastq(params.illumina) | Fastp
-        get_matching_data(Fastp.out, get_single_fastx(params.fastq), false) | UnicyclerHybrid
+        get_matching_data(illumina_reads, get_single_fastx(params.fastq), false) | UnicyclerHybrid
+        get_matching_data(UnicyclerHybrid.out, reference_assembly, false) | UnicyclerComparison
+        HybridUnicycler(UnicyclerHybrid.out)
     emit:
         UnicyclerHybrid.out
 
@@ -185,8 +186,12 @@ workflow np_core_assembly {
             ont_assembly.out[1], // polished ont assembly
             illumina_assembly.out[1] // reference illumina assembly
         )
+
         // Unicycler hybrid assembly
-        unicycler_hybrid(get_paired_fastq(params.illumina), get_single_fastx(params.fastq))
+        unicycler_hybrid(
+            illumina_assembly.out[0],
+            illumina_assembly.out[1]
+        )
 
    }
 }
