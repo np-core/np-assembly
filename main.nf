@@ -155,7 +155,7 @@ workflow unicycler_hybrid_assembly {
     main:
         get_matching_data(illumina_reads, get_single_fastx(params.fastq), false) | UnicyclerHybrid
         get_matching_data(UnicyclerHybrid.out, reference_assembly, false) | UnicyclerComparison
-        HybridUnicycler(UnicyclerHybrid.out)
+        UnicyclerGenotype(UnicyclerHybrid.out)
     emit:
         UnicyclerHybrid.out
 
