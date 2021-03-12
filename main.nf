@@ -148,16 +148,6 @@ workflow hybrid_correction {
         PilonCorrection.out
 }       
 
-workflow unicycler_hybrid_assembly {
-    take:
-        illumina_reads // id, fwd, rev
-        reference_assembly // id, fasta
-    main:
-        get_matching_data(illumina_reads, get_single_fastx(params.fastq), false) | UnicyclerHybrid
-        get_matching_data(UnicyclerHybrid.out, reference_assembly, false) | UnicyclerComparison
-        UnicyclerGenotype(UnicyclerHybrid.out)
-}
-
 
 workflow np_core_assembly {
 
@@ -185,8 +175,7 @@ workflow np_core_assembly {
         )
 
         // Unicycler hybrid assembly
-        // unicycler_hybrid_assembly(illumina_assembly.out[0], illumina_assembly.out[1])
-        get_matching_data(illumina_assembly.out[0], get_single_fastx(params.fastq), false) | UnicyclerHybrid
+        get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), false) | UnicyclerHybrid
         get_matching_data(UnicyclerHybrid.out, illumina_assembly.out[1], false) | UnicyclerComparison
         UnicyclerGenotype(UnicyclerHybrid.out)
    }
