@@ -153,9 +153,8 @@ workflow unicycler_hybrid {
         illumina_reads // id, fwd, rev
         ont_reads // id, fasta
     main:
-        get_single_fastx(params.fastq) | ont_qc
         get_paired_fastq(params.illumina) | Fastp
-        get_matching_data(Fastp.out, ont_qc.out, false) | UnicyclerHybrid
+        get_matching_data(Fastp.out, get_single_fastx(params.fastq), false) | UnicyclerHybrid
     emit:
         UnicyclerHybrid.out
 
