@@ -163,7 +163,7 @@ workflow np_core_assembly {
        // Illumina standard workflow and genotyping
        get_paired_fastq(params.illumina) | illumina_assembly
    }
-   if (params.workflow == "hybrid") {
+   if (params.workflow == "hybrid" | params.workflow == "hybrid") {
         // ONT and Illumina reference assemblies
         get_single_fastx(params.fastq) | ont_qc | ont_assembly
         get_matching_data(get_paired_fastq(params.illumina), get_single_fastx(params.fastq), true) | illumina_assembly
@@ -173,14 +173,15 @@ workflow np_core_assembly {
             ont_assembly.out[1], // polished ont assembly
             illumina_assembly.out[1] // reference illumina assembly
         )
-
+        
         // Unicycler hybrid assembly
-
         get_paired_fastq(params.illumina) | Fastp
         get_matching_data(Fastp.out, get_single_fastx(params.fastq), false) | UnicyclerHybrid
         get_matching_data(UnicyclerHybrid.out, illumina_assembly.out[1], false) | UnicyclerComparison
         UnicyclerGenotype(UnicyclerHybrid.out)
+
    }
+   
 }
 
 // Execute
