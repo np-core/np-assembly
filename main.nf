@@ -119,7 +119,7 @@ workflow ont_assembly {
         Medaka(Racon.out)
         MedakaGenotype(Medaka.out)
     emit:
-        Flye.out  // {id, assembly}, {info, gfa}
+        Flye.out[0]  // id, assembly
         Medaka.out  // id, polished assembly
 }
 
