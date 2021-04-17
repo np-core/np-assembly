@@ -115,11 +115,11 @@ workflow ont_assembly {
         reads // id, reads
     main:
         Flye(reads)
-        get_matching_data(Flye.out, reads, false) | Racon
+        get_matching_data(Flye.out[0], reads, false) | Racon
         Medaka(Racon.out)
         MedakaGenotype(Medaka.out)
     emit:
-        Flye.out  // id, assembly
+        Flye.out  // {id, assembly}, {info, gfa}
         Medaka.out  // id, polished assembly
 }
 
