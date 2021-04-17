@@ -12,7 +12,7 @@ def get_paired_fastq( glob ){
     return channel.fromFilePairs(glob, flat: true)
 }
 
-def get_matching_data( channel1, channel2, illumina = false ){
+def get_matching_data( channel1, channel2, illumina ){
 
     // Get matching data by ID (first field) from two channels
     // by crossing, checking for matched ID and returning
