@@ -67,7 +67,10 @@ params.assembler = "skesa"
 params.tag = null
 params.saureus = false
 params.kpneumoniae = false
-params.mtuberculosis = false
+
+params.mykrobe = false
+params.mykrobe_species = "staph"
+params.mykrobe_other = ""
 
 // Stage files
 
@@ -98,7 +101,7 @@ include { AssemblyGenotype as UnicyclerGenotype } from './modules/genotype' addP
 include { Dnadiff as UnicyclerComparison } from './modules/dnadiff' addParams( tag: 'unicycler' )
 
 include { AssemblyGenotype } from './modules/genotype' addParams( tag: 'preassembled' )
-include { ReadGenotype } from './modules/genotype'
+include { Mykrobe } from './modules/genotype'
 
 workflow ont_qc {
     take:
@@ -156,12 +159,12 @@ workflow np_core_assembly {
 
    if (params.workflow == "genotype") {
        
-       if (!params.mtuberculosis){
+       if (params.mykrobe)
+            // Genotyping with Mykrobe
+            get_paired_fastq(params.fastq) | Mykrobe
+       } else {
            // Genotyping from pre-assembled genomes only
            get_single_fastx(params.fasta) | AssemblyGenotype
-       } else {
-           // Genotyping from reads only 
-        get_paired_fastq(params.fastq) | ReadGenotype
        }
        
    }  
