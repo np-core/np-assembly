@@ -65,7 +65,7 @@ params.depth = 200
 params.assembler = "skesa"
 
 params.tag = null
-params.saureus = true
+params.saureus = false
 params.kpneumoniae = false
 params.mtuberculosis = false
 
