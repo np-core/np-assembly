@@ -159,7 +159,7 @@ workflow np_core_assembly {
 
    if (params.workflow == "genotype") {
        
-       if (params.mykrobe)
+       if (params.mykrobe) {
             // Genotyping with Mykrobe
             get_paired_fastq(params.fastq) | Mykrobe
        } else {
