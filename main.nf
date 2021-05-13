@@ -101,7 +101,13 @@ include { AssemblyGenotype as UnicyclerGenotype } from './modules/genotype' addP
 include { Dnadiff as UnicyclerComparison } from './modules/dnadiff' addParams( tag: 'unicycler' )
 
 include { AssemblyGenotype } from './modules/genotype' addParams( tag: 'preassembled' )
-include { Mykrobe } from './modules/genotype'
+
+include { Mykrobe } from './modules/genotype' addParams( tag: params.tag )
+
+if (params.mykrobe & params.tag == null){
+    log.info "Need to set: --tag"
+    exit 1
+}
 
 workflow ont_qc {
     take:
