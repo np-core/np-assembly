@@ -67,6 +67,7 @@ params.assembler = "skesa"
 params.tag = null
 params.saureus = true
 params.kpneumoniae = false
+params.mtuberculosis = false
 
 // Stage files
 
@@ -91,11 +92,13 @@ include { Pilon as PilonCorrection } from './modules/pilon' addParams( tag: 'med
 include { Dnadiff as ONTComparison } from './modules/dnadiff' addParams( tag: 'medaka' )
 include { Dnadiff as HybridComparison } from './modules/dnadiff' addParams( tag: 'medaka_hybrid' )
 include { Genotype as IlluminaGenotype } from './modules/genotype' addParams( tag: 'illumina' )
-include { Genotype as AssemblyGenotype } from './modules/genotype' addParams( tag: 'preassembled' )
 include { Genotype as HybridGenotype } from './modules/genotype' addParams( tag: 'hybrid' )
 include { Genotype as MedakaGenotype } from './modules/genotype' addParams( tag: 'ont' )
 include { Genotype as UnicyclerGenotype } from './modules/genotype' addParams( tag: 'unicycler' )
 include { Dnadiff as UnicyclerComparison } from './modules/dnadiff' addParams( tag: 'unicycler' )
+
+include { AssemblyGenotype } from './modules/genotype' addParams( tag: 'preassembled' )
+include { ReadGenotype } from './modules/genotype'
 
 workflow ont_qc {
     take:
@@ -152,8 +155,15 @@ workflow hybrid_correction {
 workflow np_core_assembly {
 
    if (params.workflow == "genotype") {
-       // Genotyping from pre-assembled genomes only
-       get_single_fastx(params.fasta)  | AssemblyGenotype
+       
+       if (!params.mtuberculosis){
+           // Genotyping from pre-assembled genomes only
+           get_single_fastx(params.fasta) | AssemblyGenotype
+       } else {
+           // Genotyping from reads only 
+        get_paired_fastq(params.fastq) | ReadGenotype
+       }
+       
    }  
    if (params.workflow == "ont"){
         // ONT standard workflow with Flye + Medaka and genotyping
